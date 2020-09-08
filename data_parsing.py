@@ -1,5 +1,6 @@
 import json
 import sys
+import os
 
 
 def blocks_to_dictionary(block, dictionary):
@@ -35,31 +36,52 @@ def parse_by_markers(markers, line):
     return result
 
 
+def start_reading(file):
+    block = []
+    sub_dictionary = {}
+    route_table = {'route_table': {'next_hop': {}}}
+    for line in file:
+        line = line.replace('\n', '')
+        if line[0] != ' ':
+            markers = [('', ' '), ('/', ']'), (' ', ','), ('c ', '')]
+            result = parse_by_markers(markers, line)
+            if len(block) > 0:
+                sub_dictionary = blocks_to_dictionary(block, sub_dictionary)
+            block.clear()
+        else:
+            markers = [('to ', ' '), ('via ', '')]
+            result = parse_by_markers(markers, line)
+        block.append(result)
+    route_table['route_table']['next_hop'] = sub_dictionary
+    return route_table
+
+
 if __name__ == '__main__':
     for param in sys.argv:
         if param.find('.log') != -1:
-            log_file = param
+            log_file_name = param
         if param.find('.json') != -1:
-            json_file = param
-    route_table = {'route_table': {'next_hop': {}}}
-    block = []
-    sub_dictionary = {}
-    with open(log_file) as reader:
-        for line in reader:
-            line = line.replace('\n', '')
-            if line[0] != ' ':
-                new_block = True
-                markers = [('', ' '), ('/', ']'), (' ', ','), ('c ', '')]
-                result = parse_by_markers(markers, line)
-            else:
-                new_block = False
-                markers = [('to ', ' '), ('via ', '')]
-                result = parse_by_markers(markers, line)
-            if new_block:
-                if len(block) > 0:
-                    sub_dictionary = blocks_to_dictionary(block, sub_dictionary)
-                block.clear()
-            block.append(result)
-    route_table['route_table']['next_hop'] = sub_dictionary
-    with open(json_file, "w") as write_file:
-        json.dump(route_table, write_file)
+            json_file_name = param
+    try:
+        log_file = open(log_file_name)
+        route_table = start_reading(log_file)
+        log_file.close()
+        try:
+            with open(json_file_name, "x") as write_file:
+                json.dump(route_table, write_file)
+        except FileExistsError:
+            with open(json_file_name, "w") as write_file:
+                json.dump(route_table, write_file)
+        except Exception:
+            writing_access = os.access(log_file, os.W_OK)
+            if not writing_access:
+                print("No access for writing in file %s" % json_file_name)
+    except FileNotFoundError:
+        print("File with name %s was not found" % log_file_name)
+    except Exception:
+        reading_access = os.access(log_file_name, os.R_OK)
+        if not reading_access:
+            print("No access for reading file %s" % log_file_name)
+
+
+
