@@ -1,4 +1,5 @@
 import json
+import sys
 
 
 def blocks_to_dictionary(block, dictionary):
@@ -35,10 +36,15 @@ def parse_by_markers(markers, line):
 
 
 if __name__ == '__main__':
+    for param in sys.argv:
+        if param.find('.log') != -1:
+            log_file = param
+        if param.find('.json') != -1:
+            json_file = param
     route_table = {'route_table': {'next_hop': {}}}
     block = []
     sub_dictionary = {}
-    with open('dump.log') as reader:
+    with open(log_file) as reader:
         for line in reader:
             line = line.replace('\n', '')
             if line[0] != ' ':
@@ -55,3 +61,5 @@ if __name__ == '__main__':
                 block.clear()
             block.append(result)
     route_table['route_table']['next_hop'] = sub_dictionary
+    with open(json_file, "w") as write_file:
+        json.dump(route_table, write_file)
