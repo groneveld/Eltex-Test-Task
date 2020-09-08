@@ -56,6 +56,19 @@ def start_reading(file):
     return route_table
 
 
+def json_writing(json_file_name):
+    try:
+        with open(json_file_name, "x") as write_file:
+            json.dump(route_table, write_file)
+    except FileExistsError:
+        with open(json_file_name, "w") as write_file:
+            json.dump(route_table, write_file)
+    except Exception:
+        writing_access = os.access(json_file_name, os.W_OK)
+        if not writing_access:
+            print("No access for writing in file %s" % json_file_name)
+
+
 if __name__ == '__main__':
     for param in sys.argv:
         if param.find('.log') != -1:
@@ -66,16 +79,7 @@ if __name__ == '__main__':
         log_file = open(log_file_name)
         route_table = start_reading(log_file)
         log_file.close()
-        try:
-            with open(json_file_name, "x") as write_file:
-                json.dump(route_table, write_file)
-        except FileExistsError:
-            with open(json_file_name, "w") as write_file:
-                json.dump(route_table, write_file)
-        except Exception:
-            writing_access = os.access(json_file_name, os.W_OK)
-            if not writing_access:
-                print("No access for writing in file %s" % json_file_name)
+        json_writing(json_file_name)
     except FileNotFoundError:
         print("File with name %s was not found" % log_file_name)
     except Exception:
