@@ -73,7 +73,7 @@ if __name__ == '__main__':
             with open(json_file_name, "w") as write_file:
                 json.dump(route_table, write_file)
         except Exception:
-            writing_access = os.access(log_file, os.W_OK)
+            writing_access = os.access(json_file_name, os.W_OK)
             if not writing_access:
                 print("No access for writing in file %s" % json_file_name)
     except FileNotFoundError:
