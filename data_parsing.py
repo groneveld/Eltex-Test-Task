@@ -63,10 +63,8 @@ def json_writing(json_file_name):
     except FileExistsError:
         with open(json_file_name, "w") as write_file:
             json.dump(route_table, write_file)
-    except Exception:
-        writing_access = os.access(json_file_name, os.W_OK)
-        if not writing_access:
-            print("No access for writing in file %s" % json_file_name)
+    except PermissionError:
+        print("No access for writing in file %s" % json_file_name)
 
 
 if __name__ == '__main__':
@@ -82,10 +80,5 @@ if __name__ == '__main__':
         json_writing(json_file_name)
     except FileNotFoundError:
         print("File with name %s was not found" % log_file_name)
-    except Exception:
-        reading_access = os.access(log_file_name, os.R_OK)
-        if not reading_access:
-            print("No access for reading file %s" % log_file_name)
-
-
-
+    except PermissionError:
+        print("No access for reading file %s" % log_file_name)
