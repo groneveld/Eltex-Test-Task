@@ -6,11 +6,17 @@ from sqlite3 import Error
 
 
 def age_convertation_to_str(int_age):
+    def subtraction(subtractor, value, deduction):
+        return subtractor - value * deduction
     weeks = int_age // 604800
-    days = (int_age - weeks * 604800) // 86400
-    hours = (int_age - weeks * 604800 - days * 86400) // 3600
-    minutes = (int_age - weeks * 604800 - days * 86400 - hours * 3600) // 60
-    seconds = (int_age - weeks * 604800 - days * 86400 - hours * 3600 - minutes * 60)
+    int_age = subtraction(int_age, weeks, 604800)
+    days = int_age // 86400
+    int_age = subtraction(int_age, days, 86400)
+    hours = int_age // 3600
+    int_age = subtraction(int_age, hours, 3600)
+    minutes = int_age // 60
+    int_age = subtraction(int_age, minutes, 60)
+    seconds = int_age
     string_age = ""
     if weeks > 0:
         string_age += str(weeks) + 'w'
