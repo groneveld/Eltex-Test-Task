@@ -1,6 +1,5 @@
 import json
 import sys
-import os
 
 
 def blocks_to_dictionary(block, dictionary):
@@ -40,31 +39,31 @@ def start_reading(file):
     block = []
     sub_dictionary = {}
     route_table = {'route_table': {'next_hop': {}}}
+    first_line_markers = [('', ' '), ('/', ']'), (' ', ','), ('c ', '')]
+    other_lines_markers = [('to ', ' '), ('via ', '')]
     for line in file:
         line = line.replace('\n', '')
         if line[0] != ' ':
-            markers = [('', ' '), ('/', ']'), (' ', ','), ('c ', '')]
-            result = parse_by_markers(markers, line)
+            result = parse_by_markers(first_line_markers, line)
             if len(block) > 0:
                 sub_dictionary = blocks_to_dictionary(block, sub_dictionary)
-            block.clear()
+                block.clear()
         else:
-            markers = [('to ', ' '), ('via ', '')]
-            result = parse_by_markers(markers, line)
+            result = parse_by_markers(other_lines_markers, line)
         block.append(result)
     route_table['route_table']['next_hop'] = sub_dictionary
     return route_table
 
 
-def json_writing(json_file_name):
+def file_writing(file_name, route_table):
     try:
-        with open(json_file_name, "x") as write_file:
+        with open(file_name, "x") as write_file:
             json.dump(route_table, write_file)
     except FileExistsError:
-        with open(json_file_name, "w") as write_file:
+        with open(file_name, "w") as write_file:
             json.dump(route_table, write_file)
     except PermissionError:
-        print("No access for writing in file %s" % json_file_name)
+        print("No access for writing in file %s" % file_name)
 
 
 if __name__ == '__main__':
@@ -75,10 +74,11 @@ if __name__ == '__main__':
             json_file_name = param
     try:
         log_file = open(log_file_name)
-        route_table = start_reading(log_file)
-        log_file.close()
-        json_writing(json_file_name)
     except FileNotFoundError:
         print("File with name %s was not found" % log_file_name)
     except PermissionError:
         print("No access for reading file %s" % log_file_name)
+    else:
+        route_table = start_reading(log_file)
+        log_file.close()
+        file_writing(json_file_name, route_table)
