@@ -1,7 +1,7 @@
 import json
 import sqlite3
 import sys
-from data_parsing import parse_by_markers
+import re
 from sqlite3 import Error
 
 
@@ -84,21 +84,15 @@ def create_tables(cursor):
 
 def age_convertation_to_int(string_age):
     length = 5
-    if string_age.find('w') != -1:
-        markers = [('', 'w'), ('w', 'd'), (' ', ':'), (':', ':'), (':', '')]
-    elif string_age.find('d') != -1:
-        markers = [('', 'd'), (' ', ':'), (':', ':'), (':', '')]
+    if string_age.find('w') == -1:
         length -= 1
-    else:
-        markers = [('', ':'), (':', ':'), (':', '')]
-        length -= 2
-    age = parse_by_markers(markers, string_age, False)
+    if string_age.find('d') == -1:
+        length -= 1
+    age = re.findall(r'\d+', string_age)
+    age = [int(i) for i in age]
     age = list(reversed(age))
-    int_age = int(age[0]) + 60 * int(age[1]) + 3600 * int(age[2])
-    if length >= 4:
-        int_age += 86400 * int(age[3])
-    if length == 5:
-        int_age += 604800 * int(age[4])
+    muls = [1, 60, 3600, 24 * 3600, 7 * 3600 * 24]
+    int_age = sum(mul * value for mul, value in zip(muls, age))
     return int_age
 
 

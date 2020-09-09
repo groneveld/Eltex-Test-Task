@@ -12,7 +12,7 @@ def blocks_to_dictionary(block, dictionary):
         hop = block[i][0]
         via = block[i][1]
         sub_dictionary['via'] = via
-        if hop not in dictionary.keys():
+        if not dictionary.get(hop):
             dictionary[hop] = {destination: sub_dictionary}
         else:
             dictionary[hop][destination] = sub_dictionary
@@ -64,8 +64,11 @@ def file_writing(file_name, route_table):
         with open(file_name, "x") as write_file:
             json.dump(route_table, write_file)
     except FileExistsError:
-        with open(file_name, "w") as write_file:
-            json.dump(route_table, write_file)
+        try:
+            with open(file_name, "w") as write_file:
+                json.dump(route_table, write_file)
+        except PermissionError:
+            print("No access for writing in file %s" % file_name)
     except PermissionError:
         print("No access for writing in file %s" % file_name)
 
