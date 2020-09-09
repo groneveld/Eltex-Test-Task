@@ -19,9 +19,10 @@ def blocks_to_dictionary(block, dictionary):
     return dictionary
 
 
-def parse_by_markers(markers, line):
+def parse_by_markers(markers, line, is_onebyone):
     start_index = 0
     result = []
+    addition = 0
     for start, end in markers:
         value_start = start_index
         if start:
@@ -31,7 +32,9 @@ def parse_by_markers(markers, line):
         else:
             value_end = len(line)
         result.append(line[value_start + len(start):value_end])
-        start_index = value_end + len(end)
+        if is_onebyone:
+            addition = len(end)
+        start_index = value_end + addition
     return result
 
 
@@ -44,12 +47,12 @@ def start_reading(file):
     for line in file:
         line = line.replace('\n', '')
         if line[0] != ' ':
-            result = parse_by_markers(first_line_markers, line)
+            result = parse_by_markers(first_line_markers, line, True)
             if len(block) > 0:
                 sub_dictionary = blocks_to_dictionary(block, sub_dictionary)
                 block.clear()
         else:
-            result = parse_by_markers(other_lines_markers, line)
+            result = parse_by_markers(other_lines_markers, line, True)
         block.append(result)
     sub_dictionary = blocks_to_dictionary(block, sub_dictionary)
     route_table['route_table']['next_hop'] = sub_dictionary
