@@ -52,5 +52,12 @@ if __name__ == '__main__':
                 dest_id = cursor.lastrowid
                 cursor.execute(f"INSERT INTO hop_to_destination (hop_id, dest_id) VALUES ('{hop_id}', '{dest_id}')")
         connection.commit()
+        cursor.execute("""select next_hop.hop, 
+            destination.destination, destination.preference, destination.metric, destination.age, destination.interface
+            from hop_to_destination 
+            inner join destination on destination.dest_id = hop_to_destination.dest_id 
+            inner join next_hop on next_hop.hop_id = hop_to_destination.hop_id 
+            order by destination.destination""")
+        table = cursor.fetchall()
 
         connection.close()
