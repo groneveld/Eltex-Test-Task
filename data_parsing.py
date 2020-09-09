@@ -51,6 +51,7 @@ def start_reading(file):
         else:
             result = parse_by_markers(other_lines_markers, line)
         block.append(result)
+    sub_dictionary = blocks_to_dictionary(block, sub_dictionary)
     route_table['route_table']['next_hop'] = sub_dictionary
     return route_table
 
@@ -67,18 +68,23 @@ def file_writing(file_name, route_table):
 
 
 if __name__ == '__main__':
+    log_file_name = ""
+    json_file_name = ""
     for param in sys.argv:
         if param.find('.log') != -1:
             log_file_name = param
         if param.find('.json') != -1:
             json_file_name = param
-    try:
-        log_file = open(log_file_name)
-    except FileNotFoundError:
-        print("File with name %s was not found" % log_file_name)
-    except PermissionError:
-        print("No access for reading file %s" % log_file_name)
+    if log_file_name == "" or json_file_name == "":
+        print("Wrong arguments. There are should be *.log and *.json files")
     else:
-        route_table = start_reading(log_file)
-        log_file.close()
-        file_writing(json_file_name, route_table)
+        try:
+            log_file = open(log_file_name)
+        except FileNotFoundError:
+            print("File with name %s was not found" % log_file_name)
+        except PermissionError:
+            print("No access for reading file %s" % log_file_name)
+        else:
+            route_table = start_reading(log_file)
+            log_file.close()
+            file_writing(json_file_name, route_table)
