@@ -40,6 +40,7 @@ if __name__ == '__main__':
                                """)
         for hop, dest in data['route_table']['next_hop'].items():
             cursor.execute("INSERT INTO next_hop (hop) VALUES ('{0}')".format(hop))
+            hop_id = cursor.lastrowid
             for key, value in dest.items():
                 pref = int(value.get('preference'))
                 metric = int(value.get('metric'))
@@ -48,9 +49,8 @@ if __name__ == '__main__':
                 cursor.execute(
                     f"""INSERT INTO destination (destination, preference, metric, age, interface) 
                     VALUES ('{key}','{pref}','{metric}','{age}','{interface}')""")
+                dest_id = cursor.lastrowid
+                cursor.execute(f"INSERT INTO hop_to_destination (hop_id, dest_id) VALUES ('{hop_id}', '{dest_id}')")
         connection.commit()
-        for row in cursor.execute("SELECT * FROM next_hop"):
-            print(row)
 
         connection.close()
-    print(1)
