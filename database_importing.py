@@ -1,42 +1,24 @@
 import json
+import re
 import sqlite3
 import sys
-import re
 from sqlite3 import Error
 
 
 def age_convertation_to_str(int_age):
-    def subtraction(subtractor, value, deduction):
-        return subtractor - value * deduction
-    weeks = int_age // 604800
-    int_age = subtraction(int_age, weeks, 604800)
-    days = int_age // 86400
-    int_age = subtraction(int_age, days, 86400)
-    hours = int_age // 3600
-    int_age = subtraction(int_age, hours, 3600)
-    minutes = int_age // 60
-    int_age = subtraction(int_age, minutes, 60)
-    seconds = int_age
-    string_age = ""
-    if weeks > 0:
-        string_age += str(weeks) + 'w'
-    if days == 0 and weeks > 0:
-        string_age += str(days) + 'd '
-    if days > 0:
-        string_age += str(days) + 'd '
-    if hours < 10:
-        string_age += '0' + str(hours) + ':'
-    else:
-        string_age += str(hours) + ':'
-    if minutes < 10:
-        string_age += '0' + str(minutes) + ':'
-    else:
-        string_age += str(minutes) + ':'
-    if seconds < 10:
-        string_age += '0' + str(seconds)
-    else:
-        string_age += str(seconds)
-    return string_age
+    def format_age(digit, char):
+        if char == 'w' and digit == 0:
+            return ''
+        elif char == ':' or char == '':
+            return f"{digit:02d}{char}"
+        return f"{digit}{char}"
+
+    digits = []
+    for div in [604800, 86400, 3600, 60, 1]:
+        digit = int_age // div
+        int_age = int_age % div
+        digits.append(digit)
+    return "".join([format_age(digit, char) for digit, char in zip(digits, ['w', 'd ', ':', ':', ''])])
 
 
 def print_db(data):
@@ -63,23 +45,11 @@ def create_tables(cursor):
     db_execute(cursor, "DROP TABLE IF EXISTS next_hop")
     db_execute(cursor, "DROP TABLE IF EXISTS destination")
     db_execute(cursor, "DROP TABLE IF EXISTS hop_to_destination")
-    db_execute(cursor, """CREATE TABLE IF NOT EXISTS next_hop
-                                  (hop_id INTEGER PRIMARY KEY, 
-                                  hop text)
-                               """)
-    db_execute(cursor, """CREATE TABLE IF NOT EXISTS destination
-                                                  (dest_id INTEGER PRIMARY KEY, 
-                                                  destination text,
-                                                  preference integer,
-                                                  metric integer,
-                                                  age integer,
-                                                  interface text)
-                                               """)
-    db_execute(cursor, """CREATE TABLE IF NOT EXISTS hop_to_destination
-                                          (id INTEGER PRIMARY KEY, 
-                                          hop_id integer REFERENCES next_hop(hop_id),
-                                          dest_id integer REFERENCES destination(dest_id))
-                                       """)
+    db_execute(cursor, """CREATE TABLE IF NOT EXISTS next_hop (hop_id INTEGER PRIMARY KEY, hop text)""")
+    db_execute(cursor, """CREATE TABLE IF NOT EXISTS destination (dest_id INTEGER PRIMARY KEY, 
+                        destination text, preference integer, metric integer, age integer, interface text)""")
+    db_execute(cursor, """CREATE TABLE IF NOT EXISTS hop_to_destination (id INTEGER PRIMARY KEY, 
+                        hop_id integer REFERENCES next_hop(hop_id), dest_id integer REFERENCES destination(dest_id))""")
 
 
 def age_convertation_to_int(string_age):
@@ -114,13 +84,11 @@ def db_writing(data, cursor):
 
 
 def db_reading(cursor):
-    db_execute(cursor, """select next_hop.hop, 
-                    destination.destination, destination.preference, destination.metric, destination.age, destination.interface
-                    from hop_to_destination 
+    db_execute(cursor, """select next_hop.hop, destination.destination, destination.preference, destination.metric, 
+                    destination.age, destination.interface from hop_to_destination 
                     inner join destination on destination.dest_id = hop_to_destination.dest_id 
-                    inner join next_hop on next_hop.hop_id = hop_to_destination.hop_id
-                    group by hop_to_destination.id 
-                    order by destination.destination""")
+                    inner join next_hop on next_hop.hop_id = hop_to_destination.hop_id 
+                    group by hop_to_destination.id order by destination.destination""")
     table = cursor.fetchall()
     print_db(table)
 
