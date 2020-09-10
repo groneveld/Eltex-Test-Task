@@ -93,6 +93,39 @@ def db_reading(cursor):
     print_db(table)
 
 
+def connect_to_database(database_name, json_file):
+    try:
+        connection = sqlite3.connect(database_name)
+        return connection
+    except Error:
+        print(Error)
+        sys.exit()
+
+
+def reading_json(json_file_name):
+    try:
+        json_file = open(json_file_name)
+        return json_file
+    except FileNotFoundError:
+        print("File with name %s was not found" % json_file_name)
+        sys.exit()
+    except PermissionError:
+        print("No access for reading file %s" % json_file_name)
+        sys.exit()
+
+
+def upload_json_to_dict(json_file):
+    try:
+        data = json.load(json_file)
+        return data
+    except TypeError:
+        print(TypeError)
+        sys.exit()
+    except ValueError:
+        print(ValueError)
+        sys.exit()
+
+
 if __name__ == '__main__':
     database_name = ""
     json_file_name = ""
@@ -103,29 +136,12 @@ if __name__ == '__main__':
             json_file_name = param
     if database_name == "" or json_file_name == "":
         print("Wrong arguments. There are should be *.db and *.json files")
-    try:
-        connection = sqlite3.connect(database_name)
-    except Error:
-        print(Error)
-    else:
-        try:
-            json_file = open(json_file_name)
-        except FileNotFoundError:
-            print("File with name %s was not found" % json_file_name)
-        except PermissionError:
-            print("No access for reading file %s" % json_file_name)
-        else:
-            try:
-                data = json.load(json_file)
-            except TypeError:
-                print(TypeError)
-                sys.exit()
-            except ValueError:
-                print(ValueError)
-                sys.exit()
-            cursor = connection.cursor()
-            create_tables(cursor)
-            db_writing(data, cursor)
-            connection.commit()
-            db_reading(cursor)
-            connection.close()
+    connection = connect_to_database(database_name)
+    json_file = reading_json(json_file_name)
+    data = upload_json_to_dict(json_file)
+    cursor = connection.cursor()
+    create_tables(cursor)
+    db_writing(data, cursor)
+    connection.commit()
+    db_reading(cursor)
+    connection.close()
